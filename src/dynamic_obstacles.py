@@ -28,7 +28,7 @@ def position_node():
     # Declare the node, and register it with a unique name
     rospy.init_node('model_service_node', anonymous=True)
     # Define the execution rate object (10Hz)
-    rate = rospy.Rate(10)
+    rate = rospy.Rate(100)
     spawn_model( 'obstacle_0')
     spawn_model('obstacle_1')
     spawn_model('obstacle_2')
@@ -58,6 +58,7 @@ def position_node():
                 resp = set_state(state_msg_2)
             except rospy.ServiceException as e:
                 print("Service call failed: ", e)
+            rate.sleep()
         for i in range(t):
             state_msg_0.pose.position.y = 2-6.0*i/t
 
@@ -72,7 +73,7 @@ def position_node():
                 resp = set_state(state_msg_2)
             except rospy.ServiceException as e:
                 print("Service call failed: ", e)
-
+            rate.sleep()
 
 if __name__ == '__main__':
     try:
@@ -80,55 +81,3 @@ if __name__ == '__main__':
     except rospy.ROSInterruptException:
         pass
 
-
-
-
-
-#
-#
-# #!/usr/bin/env python3
-# import rospy
-# import rospkg
-# from gazebo_msgs.msg import ModelState
-# from gazebo_msgs.srv import SetModelState
-#
-# def main():
-#
-#     rospy.init_node('set_pose')
-#
-#     state_msg = ModelState()
-#     state_msg.pose.position.x = 30
-#
-#     state_msg.pose.position.z = 0
-#     state_msg.pose.orientation.x = 0
-#     state_msg.pose.orientation.y = 0
-#     state_msg.pose.orientation.z = 0
-#     state_msg.pose.orientation.w = 0
-#     state_msg.model_name = 'turtlebot3_square_large::obstacle_0'
-#     t = 500
-#     while not rospy.is_shutdown():
-#         for i in range(t):
-#             state_msg.pose.position.y = -3+6.0*i/t
-#             rospy.wait_for_service('/gazebo/set_model_state')
-#             try:
-#                 set_state = rospy.ServiceProxy('/gazebo/set_model_state', SetModelState)
-#                 resp = set_state( state_msg )
-#
-#             except rospy.ServiceException as e:
-#                 print("Service call failed: ", e)
-#         for i in range(t):
-#             state_msg.pose.position.y = 3-6.0*i/t
-#             rospy.wait_for_service('/gazebo/set_model_state')
-#             try:
-#                 set_state = rospy.ServiceProxy('/gazebo/set_model_state', SetModelState)
-#                 resp = set_state( state_msg )
-#
-#             except rospy.ServiceException as e:
-#                 print("Service call failed: ", e)
-#         print("Update states")
-#
-# if __name__ == '__main__':
-#     try:
-#         main()
-#     except rospy.ROSInterruptException:
-#         pass
