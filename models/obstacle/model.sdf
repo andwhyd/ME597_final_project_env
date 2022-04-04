@@ -23,7 +23,7 @@
         <material>
           <script>
             <uri>file://media/materials/scripts/gazebo.material</uri>
-            <name>Gazebo/White</name>
+            <name>Gazebo/Black</name>
           </script>
           <ambient>1 1 1 1</ambient>
         </material>

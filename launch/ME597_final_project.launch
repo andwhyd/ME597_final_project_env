@@ -4,8 +4,6 @@
   <arg name="y_pos" default="-12.0"/>
   <arg name="z_pos" default="0.0"/>
 
-  <env name="GAZEBO_MODEL_PATH" value="$(find final_project)/models" />
-
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
     <arg name="world_name" value="$(find final_project)/worlds/ME597_final_project.world"/>
     <arg name="paused" value="false"/>
