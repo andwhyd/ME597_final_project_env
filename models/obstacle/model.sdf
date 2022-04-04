@@ -20,13 +20,12 @@
               <length>.5</length>
             </cylinder>
         </geometry>
-        <material>
-          <script>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-            <name>Gazebo/White</name>
-          </script>
-          <ambient>1 1 1 1</ambient>
-        </material>
+                <material> <!-- LED material -->
+          <ambient>0 0 0 1</ambient>
+          <diffuse>0 0 0 1</diffuse>
+          <specular>0 0 0 0</specular>
+          <emissive>1 1 1 1</emissive>
+        </material> <!-- End LED material -->
       </visual>
       <pose frame=''>0 0 0 0 -0 0</pose>
     </link>
