@@ -96,7 +96,9 @@ class Node():
                         heading = self.robot_heading+alpha
                         x_g = self.robot_x+math.cos(heading)*dist
                         y_g = self.robot_y + math.sin(heading) * dist
-                        self.rgb_objects_tmp.append([ round(x_g, 2),round(y_g,2),round(dist,2)])
+                        x_r =  math.cos(alpha) * dist
+                        y_r =  math.sin(alpha) * dist
+                        self.rgb_objects_tmp.append([round(x_r,2),round(y_r,2) ,round(dist,2)])
                         area_old = area
 
         if len(self.rgb_objects_tmp)>0:
