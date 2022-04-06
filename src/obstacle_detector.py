@@ -100,12 +100,12 @@ class Node():
                         y_r =  math.sin(alpha) * dist
                         self.rgb_objects_tmp.append([round(x_r,2),round(y_r,2) ,round(dist,2)])
                         area_old = area
-
+        obstacle = Float64MultiArray()
         if len(self.rgb_objects_tmp)>0:
             #print(self.rgb_objects_tmp)
-            obstacle = Float64MultiArray()
+
             obstacle.data = self.rgb_objects_tmp[0]
-            self.obstacle_pub.publish(obstacle)  # publish the position of the obstacle and the distance
+        self.obstacle_pub.publish(obstacle)  # publish the position of the obstacle and the distance
         self.rgb_objects_tmp = []  # reset the list
         cv2.imshow("White", res_white)
         cv2.waitKey(1)
