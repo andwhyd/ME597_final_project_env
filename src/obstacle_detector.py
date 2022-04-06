@@ -102,7 +102,7 @@ class Node():
                         area_old = area
 
         if len(self.rgb_objects_tmp)>0:
-            print(self.rgb_objects_tmp)
+            #print(self.rgb_objects_tmp)
             obstacle = Float64MultiArray()
             obstacle.data = self.rgb_objects_tmp[0]
             self.obstacle_pub.publish(obstacle)  # publish the position of the obstacle and the distance

@@ -9,6 +9,7 @@ import tf
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 from nav_msgs.msg import Path
 from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped, Pose, Twist
+from std_msgs.msg import Float64MultiArray
 
 from nav_utils import *
 
@@ -36,7 +37,9 @@ class Navigation:
         self.new_goal = False
         self.pos_cov = [0]*36
         self.global_idx = 0
-
+        self.obstacle_in_range = False
+        self.avoid_heading = 0
+        self.avoid_speed = 0.0
 
     def init_app(self):
         """! Node intialization.
@@ -50,9 +53,35 @@ class Navigation:
         # Subscribers
         rospy.Subscriber('/move_base_simple/goal', PoseStamped, self.__goal_pose_cbk, queue_size=1)
         rospy.Subscriber('/amcl_pose', PoseWithCovarianceStamped, self.__ttbot_pose_cbk, queue_size=1)
+        rospy.Subscriber('/obstacle_list', Float64MultiArray, self.__obstacles_cbk, queue_size=1)
         # Publishers
         self.path_pub = rospy.Publisher('global_plan', Path, queue_size=1)
         self.cmd_vel_pub = rospy.Publisher('cmd_vel', Twist, queue_size=1)
+    
+    def __obstacles_cbk(self,data):
+        """! Callback to catch the list of obstacles arround the vehicle.
+        @param  data    Float64MultiArray object from RVIZ.
+        @return None.
+        """
+        flag = False
+        obstacles = data.data
+        x,y,d = obstacles
+        quaternion = (self.ttbot_pose.pose.orientation.x,
+                      self.ttbot_pose.pose.orientation.y,
+                      self.ttbot_pose.pose.orientation.z,
+                      self.ttbot_pose.pose.orientation.w)
+        euler = tf.transformations.euler_from_quaternion(quaternion)
+        current_heading = euler[2]
+        if d<6 and np.abs(y)<3.0:
+            flag = True
+            self.avoid_heading = current_heading - np.sign(y)*0.9*np.pi/2
+            self.avoid_speed = 0.6
+        else:
+            self.avoid_heading = 0
+            self.avoid_speed = 0
+        self.obstacle_in_range = flag
+        rospy.loginfo('is there any obstacle obstacles?:{}'.format(self.obstacle_in_range))
+
 
     def __goal_pose_cbk(self, data):
         """! Callback to catch the goal pose.
@@ -199,13 +228,13 @@ class Navigation:
                       current_goal_pose.pose.orientation.z,
                       current_goal_pose.pose.orientation.w)
         euler = tf.transformations.euler_from_quaternion(quaternion)
-        tgt_heading = euler[2]
+        tgt_heading = euler[2] + self.avoid_heading
         if idx < (len(path.poses)-1):
             angle = np.arctan2(p2[1]-p1[1],p2[0]-p1[0])
             delta = angdiff(tgt_heading,angle)
-            speed = 0.8*d
-            heading = (tgt_heading + delta/2)
-            rospy.loginfo('tgt:{:.3f},angle:{:.3f}'.format(np.rad2deg(tgt_heading),np.rad2deg(angle)))
+            speed = 0.9*d if self.obstacle_in_range == False else self.avoid_speed
+            heading = (tgt_heading + 0.5*delta)
+            #rospy.loginfo('tgt:{:.3f},angle:{:.3f}'.format(np.rad2deg(tgt_heading),np.rad2deg(angle)))
         else:
             speed = 0
             heading = tgt_heading
@@ -225,9 +254,11 @@ class Navigation:
         euler = tf.transformations.euler_from_quaternion(quaternion)
         current_heading = euler[2]
         ang_error = angdiff(current_heading,heading)
-        cmd_vel.linear.x = speed*(1-np.abs(ang_error)/np.pi)**2
+        cmd_vel.linear.x = speed*(1-np.abs(ang_error)/np.pi)**4
         cmd_vel.angular.z = 0.3*(ang_error)
-
+        # if self.obstacle_in_range == True:
+        #     cmd_vel.linear.x = 0
+        #     cmd_vel.angular.z = 0
         self.cmd_vel_pub.publish(cmd_vel)
     
     def improve_pos_estimate(self):
@@ -270,7 +301,7 @@ class Navigation:
         error = 10
 
         # Initial routine to improve vehicle localization
-        while(error >= 0.01) or (error == 0):
+        while(error >= 0.02) or (error == 0):
             self.improve_pos_estimate()
             error = np.abs(self.pos_cov[0])+np.abs(self.pos_cov[7])+np.abs(self.pos_cov[35])
             rospy.loginfo('Error: {}'.format(error))
@@ -286,9 +317,9 @@ class Navigation:
             if path != None:
                 # 2. Loop through the path and move the robot
                 self.global_idx = self.get_path_idx(path,self.ttbot_pose)
-                look_ahead = 2
+                look_ahead = 5
                 speed,heading = self.path_follower(self.ttbot_pose,path,self.global_idx+look_ahead)
-                rospy.loginfo('{:3d},{:.3f},{:.2f}'.format(self.global_idx,speed,heading*180/3.1416))
+                #rospy.loginfo('{:3d},{:.3f},{:.2f}'.format(self.global_idx,speed,heading*180/3.1416))
                 self.move_ttbot(speed,heading)
             self.rate.sleep() 
         rospy.signal_shutdown("[{}] Finished Cleanly".format(self.name))
