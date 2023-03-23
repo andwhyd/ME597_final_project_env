@@ -186,5 +186,27 @@
       </plugin>
     </sensor>
   </gazebo>
+  
+  <gazebo reference="bumper_link">
+    <sensor name="contacts" type="contact">
+        <contact>
+          <collision>base_footprint_fixed_joint_lump__base_collision_collision_1</collision>
+        </contact>
+        <plugin name="gazebo_ros_bumper_controller" filename="libgazebo_ros_bumper.so">
+          <always_on>true</always_on>
+          <robotNamespace>/robot</robotNamespace>
+          <bumperTopicName>bumper_states</bumperTopicName>
+          <frameName>bumper</frameName>
+          <visualize>true</visualize>
+          <update_rate>50.0</update_rate>        
+        </plugin>
+    </sensor>
+    <material>Gazebo/Red</material>
+    <mu1>0.1</mu1>
+    <mu2>0.1</mu2>
+    <gravity>true</gravity>
+    <selfCollide>false</selfCollide>
+  </gazebo>
+
 
 </robot>
