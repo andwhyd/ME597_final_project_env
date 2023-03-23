@@ -126,11 +126,7 @@
           </horizontal>
         </scan>
         <range>
-<<<<<<< HEAD
           <min>0.25</min>
-=======
-          <min>0.120</min>
->>>>>>> 3124a5076e971f600dd35d47bfd9845bec4589fd
           <max>13.0</max>
           <resolution>0.015</resolution>
         </range>
