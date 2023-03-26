@@ -6255,10 +6255,10 @@
       <pose>3.18667 -1.19836 0.5 0 -0 0</pose>
     </model>
     <state world_name='default'>
-      <sim_time>890 145000000</sim_time>
-      <real_time>111 676447050</real_time>
-      <wall_time>1679855706 738753756</wall_time>
-      <iterations>111603</iterations>
+      <sim_time>993 578000000</sim_time>
+      <real_time>103 507753724</real_time>
+      <wall_time>1679862360 75321536</wall_time>
+      <iterations>103433</iterations>
       <model name='door'>
         <pose>3.18667 -1.19836 0.5 0 -0 0</pose>
         <scale>1 1 1</scale>
@@ -6459,10 +6459,10 @@
           </link>
         </model>
         <model name='cabinet_1'>
-          <pose>-5.11052 0.230252 0 0 0 -1.5708</pose>
+          <pose>-5.2 0.2 0 0 -0 0</pose>
           <scale>1 1 1</scale>
           <link name='cabinet_bottom_plate'>
-            <pose>-5.11052 0.230252 0 0 0 -1.5708</pose>
+            <pose>-5.2 0.2 0 0 -0 0</pose>
             <velocity>0 0 0 0 -0 0</velocity>
             <acceleration>0 0 0 0 -0 0</acceleration>
             <wrench>0 0 0 0 -0 0</wrench>
@@ -6486,26 +6486,6 @@
             <velocity>0 0 0 0 -0 0</velocity>
             <acceleration>0 0 0 0 -0 0</acceleration>
             <wrench>0 0 0 0 -0 0</wrench>
-          </link>
-        </model>
-        <model name='first_2015_trash_can'>
-          <pose>3.95657 0.894192 0 0 -0 0</pose>
-          <scale>1 1 1</scale>
-          <link name='link'>
-            <pose>3.95662 0.894166 2e-06 2.9e-05 -3e-06 -0.000146</pose>
-            <velocity>0 0 0 0 -0 0</velocity>
-            <acceleration>0.031185 2.92198 -2.82029 -1.65068 0.084692 5e-06</acceleration>
-            <wrench>0.150646 14.1154 -13.6241 0 -0 0</wrench>
-          </link>
-        </model>
-        <model name='first_2015_trash_can_0'>
-          <pose>-2.62043 3.87665 0 0 -0 0</pose>
-          <scale>1 1 1</scale>
-          <link name='link'>
-            <pose>-2.62038 3.87664 -3e-06 8e-06 -2e-06 -0.000142</pose>
-            <velocity>0 0 0 0 -0 0</velocity>
-            <acceleration>2.39148 10.0345 15.7781 -2.0868 0.427959 0.372745</acceleration>
-            <wrench>11.5527 48.4742 76.22 0 -0 0</wrench>
           </link>
         </model>
         <model name='table'>
@@ -6535,7 +6515,7 @@
     </state>
     <gui fullscreen='0'>
       <camera name='user_camera'>
-        <pose>-5.34305 -2.96215 27.08 0 1.36179 -0.013034</pose>
+        <pose>-8.23949 -0.758912 26.0549 0 1.4138 -0.297042</pose>
         <view_controller>orbit</view_controller>
         <projection_type>perspective</projection_type>
       </camera>
