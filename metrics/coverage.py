@@ -17,6 +17,7 @@ def area_from_pgm(map_name: str):
     with open(map_yaml_path, 'r') as f:
         map_yaml = yaml.safe_load(f)
         resolution = map_yaml['resolution']
+        print(f"Map resolution is {resolution}")
 
     # read pixel values from .pgm file
     with open(map_pgm_path, 'rb') as f:
