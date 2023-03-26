@@ -1,4 +1,4 @@
-<sdf version='1.6'>
+<sdf version='1.7'>
   <world name='default'>
     <scene>
       <ambient>0.4 0.4 0.4 1</ambient>
@@ -4279,60 +4279,6 @@
         </collision>
         <enable_wind>0</enable_wind>
       </link>
-      <model name='Mailbox'>
-        <link name='link'>
-          <collision name='collision'>
-            <geometry>
-              <mesh>
-                <uri>model://mailbox/meshes/mailbox.dae</uri>
-              </mesh>
-            </geometry>
-            <max_contacts>10</max_contacts>
-            <surface>
-              <contact>
-                <ode/>
-              </contact>
-              <bounce/>
-              <friction>
-                <torsional>
-                  <ode/>
-                </torsional>
-                <ode/>
-              </friction>
-            </surface>
-          </collision>
-          <visual name='visual'>
-            <geometry>
-              <mesh>
-                <uri>model://mailbox/meshes/mailbox.dae</uri>
-              </mesh>
-            </geometry>
-            <material>
-              <script>
-                <uri>model://mailbox/materials/scripts</uri>
-                <uri>model://mailbox/materials/textures</uri>
-                <name>Mailbox/Diffuse</name>
-              </script>
-            </material>
-          </visual>
-          <self_collide>0</self_collide>
-          <inertial>
-            <pose>0 0 0 0 -0 0</pose>
-            <inertia>
-              <ixx>1</ixx>
-              <ixy>0</ixy>
-              <ixz>0</ixz>
-              <iyy>1</iyy>
-              <iyz>0</iyz>
-              <izz>1</izz>
-            </inertia>
-            <mass>1</mass>
-          </inertial>
-          <enable_wind>0</enable_wind>
-          <kinematic>0</kinematic>
-        </link>
-        <pose>0.883462 -0.576236 0 0 0 -3.14159</pose>
-      </model>
       <model name='bookshelf'>
         <static>1</static>
         <link name='link'>
@@ -6403,10 +6349,10 @@
       <pose>3.18667 -1.19836 0.5 0 -0 0</pose>
     </model>
     <state world_name='default'>
-      <sim_time>81 381000000</sim_time>
-      <real_time>82 68318214</real_time>
-      <wall_time>1679517212 151716088</wall_time>
-      <iterations>81381</iterations>
+      <sim_time>778 542000000</sim_time>
+      <real_time>697 558342823</real_time>
+      <wall_time>1679855576 349785059</wall_time>
+      <iterations>697161</iterations>
       <model name='door'>
         <pose>3.18667 -1.19836 0.5 0 -0 0</pose>
         <scale>1 1 1</scale>
@@ -6556,61 +6502,51 @@
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
-        <model name='Mailbox'>
-          <pose>2.95658 -1.59397 0 0 0 -3.14159</pose>
-          <scale>1 1 1</scale>
-          <link name='link'>
-            <pose>2.95658 -1.59397 -1e-05 -2e-06 2e-06 -3.14159</pose>
-            <velocity>0 0 0 0 -0 0</velocity>
-            <acceleration>0 0 -9.8 0 -0 0</acceleration>
-            <wrench>0 0 -9.8 0 -0 0</wrench>
-          </link>
-        </model>
         <model name='bookshelf'>
-          <pose>-4.47086 4.17712 0 0 -0 0</pose>
+          <pose>-5 3.8 0 0 -0 3.14</pose>
           <scale>1 1 1</scale>
           <link name='link'>
-            <pose>-4.47086 4.17712 0 0 -0 0</pose>
+            <pose>-5 3.8 0 0 -0 3.14</pose>
             <velocity>0 0 0 0 -0 0</velocity>
             <acceleration>0 0 0 0 -0 0</acceleration>
             <wrench>0 0 0 0 -0 0</wrench>
           </link>
         </model>
         <model name='bookshelf_0'>
-          <pose>6.7967 4.16147 0 0 -0 0</pose>
+          <pose>7 3.8 0 0 -0 3.14</pose>
           <scale>1 1 1</scale>
           <link name='link'>
-            <pose>6.7967 4.16147 0 0 -0 0</pose>
+            <pose>7 3.8 0 0 -0 3.14</pose>
             <velocity>0 0 0 0 -0 0</velocity>
             <acceleration>0 0 0 0 -0 0</acceleration>
             <wrench>0 0 0 0 -0 0</wrench>
           </link>
         </model>
         <model name='bookshelf_1'>
-          <pose>7.7176 4.16138 0 0 -0 0</pose>
+          <pose>7.8 3.8 0 0 -0 3.14</pose>
           <scale>1 1 1</scale>
           <link name='link'>
-            <pose>7.7176 4.16138 0 0 -0 0</pose>
+            <pose>7.8 3.8 0 0 -0 3.14</pose>
             <velocity>0 0 0 0 -0 0</velocity>
             <acceleration>0 0 0 0 -0 0</acceleration>
             <wrench>0 0 0 0 -0 0</wrench>
           </link>
         </model>
         <model name='cabinet'>
-          <pose>-3.39889 -2.59398 0 0 -0 0</pose>
+          <pose>-3.4 -2.5 0 0 -0 3.14</pose>
           <scale>1 1 1</scale>
           <link name='cabinet_bottom_plate'>
-            <pose>-3.39889 -2.59398 0 0 -0 0</pose>
+            <pose>-3.4 -2.5 0 0 -0 3.14</pose>
             <velocity>0 0 0 0 -0 0</velocity>
             <acceleration>0 0 0 0 -0 0</acceleration>
             <wrench>0 0 0 0 -0 0</wrench>
           </link>
         </model>
         <model name='cabinet_0'>
-          <pose>-3.39978 -3.08319 0 0 -0 0</pose>
+          <pose>-3.4 -3 0 0 -0 3.14</pose>
           <scale>1 1 1</scale>
           <link name='cabinet_bottom_plate'>
-            <pose>-3.39978 -3.08319 0 0 -0 0</pose>
+            <pose>-3.4 -3 0 0 -0 3.14</pose>
             <velocity>0 0 0 0 -0 0</velocity>
             <acceleration>0 0 0 0 -0 0</acceleration>
             <wrench>0 0 0 0 -0 0</wrench>
@@ -6650,27 +6586,27 @@
           <pose>3.95657 0.894192 0 0 -0 0</pose>
           <scale>1 1 1</scale>
           <link name='link'>
-            <pose>3.95659 0.894185 3e-06 -2.6e-05 2.2e-05 -5.7e-05</pose>
+            <pose>3.95661 0.894167 -1e-06 -1.9e-05 7e-06 -0.00017</pose>
             <velocity>0 0 0 0 -0 0</velocity>
-            <acceleration>-4.07758 -6.47711 8.55228 -1.26295 1.49501 0.000177</acceleration>
-            <wrench>-19.6978 -31.2894 41.314 0 -0 0</wrench>
+            <acceleration>4.09391 -0.637988 0.126252 1.36308 -0.843002 0.427</acceleration>
+            <wrench>19.7767 -3.08197 0.609892 0 -0 0</wrench>
           </link>
         </model>
         <model name='first_2015_trash_can_0'>
           <pose>-2.62043 3.87665 0 0 -0 0</pose>
           <scale>1 1 1</scale>
           <link name='link'>
-            <pose>-2.62041 3.87665 -1e-06 4.1e-05 3e-06 -3.2e-05</pose>
+            <pose>-2.62039 3.87664 -3e-06 -5e-06 6e-06 -0.000144</pose>
             <velocity>0 0 0 0 -0 0</velocity>
-            <acceleration>0 0 -9.8 0 -0 0</acceleration>
-            <wrench>0 0 -47.3414 0 -0 0</wrench>
+            <acceleration>-1.96736 -0.287753 -5.00628 0.781282 0.941435 -3.1e-05</acceleration>
+            <wrench>-9.50382 -1.39007 -24.1842 0 -0 0</wrench>
           </link>
         </model>
         <model name='table'>
           <pose>-0.584166 1.40602 0 0 -0 0</pose>
           <scale>1 1 1</scale>
           <link name='link'>
-            <pose>-0.584166 1.40602 -8e-06 0 -0 0</pose>
+            <pose>-0.584166 1.40602 -6e-06 2e-06 -5e-06 -0</pose>
             <velocity>0 0 0 0 -0 0</velocity>
             <acceleration>0 0 -9.8 0 -0 0</acceleration>
             <wrench>0 0 -9.8 0 -0 0</wrench>
@@ -6693,7 +6629,7 @@
     </state>
     <gui fullscreen='0'>
       <camera name='user_camera'>
-        <pose>-3.42599 1.78135 6.50062 0 0.741789 -0.499811</pose>
+        <pose>-0.654107 -3.30771 32.8134 0 1.48579 -0.007819</pose>
         <view_controller>orbit</view_controller>
         <projection_type>perspective</projection_type>
       </camera>
