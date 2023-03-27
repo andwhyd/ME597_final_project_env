@@ -42,13 +42,14 @@ def area_from_pgm(map_name: str):
 
 class Coverage:
     def __init__(self):
-        rospy.init_node('coverage_node', anonymous=True)
+        rospy.init_node('coverage_metric_node', anonymous=True)
         self.map_sub = rospy.Subscriber('/map', OccupancyGrid, callback=self.coverage_callback, queue_size=1)
         self.TOTAL_AREA: float = 92.1
         self.OBSTACLE_THR: int = 65
         self.FREE_THR: int = 25
         self.covered_area: int = 0
         self.coverage_rate: float = 0
+        rospy.loginfo("Coverage metric is running ...")
         rospy.spin()
 
     def coverage_callback(self, msg: OccupancyGrid):
