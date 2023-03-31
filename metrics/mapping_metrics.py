@@ -9,7 +9,7 @@ def area_from_pgm(map_name: str):
     import os
 
     # specify file paths by map name, make sure your map files are in ../maps folder
-    map_dir_path = os.path.dirname(__file__) + '../maps/'
+    map_dir_path = os.path.dirname(__file__) + '/../maps/'
     map_pgm_path = map_dir_path + map_name + '.pgm'
     map_yaml_path = map_dir_path + map_name + '.yaml'
 
