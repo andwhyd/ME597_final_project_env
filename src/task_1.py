@@ -39,12 +39,12 @@ class Explorer:
         self.dists[1] = data.ranges[240]
         self.dists[2] = data.ranges[0]
         rospy.loginfo(
-            f"dist 0: {self.dists[0]}, dist 1: {self.dists[1]}, dist 2: {self.dists[2]}"
+            f"dist 0: {self.dists[0]}, dist 1: {self.dists[1]}, dist front: {self.dists[2]}"
         )
 
     def find_first_wall(self):
         startTime = monotonic()
-        turn90Time = 3  # s
+        turn90Time = 3 # s
         turn90Speed = 0.5  # rad/s
         goalDist = 0.5  # m
         forwardSpeed = 0.2  # m/s
@@ -83,15 +83,15 @@ class Explorer:
 
     def follow_wall(self):
         turnP = 5
-        turnD = 4
-        forwardSpeed = 0.5  # m/s
+        turnD = 5
+        forwardSpeed = 0.4  # m/s
         frontThresh = 0.6  # m
 
         cmd_vel = Twist()
         
         if self.dists[2] < frontThresh:
-            cmd_vel.linear.x = forwardSpeed / 5
-            cmd_vel.angular.z = 1.5
+            cmd_vel.linear.x = -forwardSpeed / 10
+            cmd_vel.angular.z = 1.6
         else:
             cmd_vel.linear.x = forwardSpeed
             cmd_vel.angular.z = (
