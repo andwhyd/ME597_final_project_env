@@ -443,37 +443,35 @@ class Navigation:
                 start_pose.pose.position, end_pose.pose.position
             )
         )
-        img_size_w = 384
-        img_size_h = 608
+        img_size_h = 243
+        img_size_w = 243
         resolution = 0.05
-        origin_offset = 10
+        origin_offset_x = 10
+        origin_offset_y = 10
 
         x_img = (
-            abs(round(start_pose.pose.position.y / resolution - img_size_w / 2))
-            - origin_offset
+            abs(round(start_pose.pose.position.y / resolution - img_size_h / 2))
+            - origin_offset_x
         )
-        y_img = abs(round(start_pose.pose.position.x / resolution - img_size_h / 2))
-        if y_img < (img_size_h / 2) + origin_offset:
-            y_img = round(img_size_h / 2 + abs(img_size_h / 2 - y_img)) + origin_offset
+        y_img = abs(round(start_pose.pose.position.x / resolution - img_size_w / 2))
+        if y_img < (img_size_w / 2) - origin_offset_y:
+            y_img = round(img_size_w / 2 + abs(img_size_w / 2 - y_img)) - origin_offset_y
 
-        elif y_img > (img_size_h / 2) + origin_offset:
-            y_img = round(img_size_h / 2 - abs(img_size_h / 2 - y_img)) + origin_offset
-
+        elif y_img > (img_size_w / 2) + origin_offset_y:
+            y_img = round(img_size_w / 2 - abs(img_size_w / 2 - y_img)) - origin_offset_y
         self.mp.map_graph.root = f"{x_img},{y_img}"
         rospy.loginfo(f"root = {x_img}, {y_img}")
+
         x_img = (
-            abs(round(end_pose.pose.position.y / resolution - img_size_w / 2))
-            - origin_offset
+            abs(round(end_pose.pose.position.y / resolution - img_size_h / 2))
+            - origin_offset_x
         )
-        y_img = abs(round(end_pose.pose.position.x / resolution - img_size_h / 2))
-        if y_img < img_size_h / 2:
-            y_img = round(img_size_h / 2 + abs(img_size_h / 2 - y_img)) + origin_offset
+        y_img = abs(round(end_pose.pose.position.x / resolution - img_size_w / 2))
+        if y_img < (img_size_w / 2) - origin_offset_y:
+            y_img = round(img_size_w / 2 + abs(img_size_w / 2 - y_img)) - origin_offset_y
 
-        elif y_img > img_size_h / 2:
-            y_img = round(img_size_h / 2 - abs(img_size_h / 2 - y_img)) + origin_offset
-        else:
-            y_img += origin_offset
-
+        elif y_img > (img_size_w / 2) + origin_offset_y:
+            y_img = round(img_size_w / 2 - abs(img_size_w / 2 - y_img)) - origin_offset_y
         self.mp.map_graph.end = f"{x_img},{y_img}"
         rospy.loginfo(f"end = {x_img}, {y_img}")
 
@@ -496,10 +494,10 @@ class Navigation:
             path_pose = PoseStamped()
             pose = tuple(map(int, pose.split(",")))
             path_pose.pose.position.x = (
-                (pose[1] - origin_offset) - img_size_h / 2
+                (pose[1] - origin_offset_x) - img_size_h / 2
             ) * resolution
             path_pose.pose.position.y = (
-                -((pose[0] + origin_offset) - img_size_w / 2) * resolution
+                -((pose[0] + origin_offset_y) - img_size_w / 2) * resolution
             )
             path.poses.append(path_pose)
         path.poses.append(end_pose)
@@ -645,6 +643,7 @@ if __name__ == "__main__":
     nav = Navigation(node_name="Navigation")
     nav.init_app()
     try:
-        cProfile.run("nav.run()")
+        # cProfile.run("nav.run()")
+        nav.run()
     except rospy.ROSInterruptException:
         print("program interrupted before completion", file=sys.stderr)
