@@ -3,18 +3,16 @@
 import sys
 import yaml
 import rospy
-import time
 import heapq
 import rospkg
 import numpy as np
 import pandas as pd
 from copy import copy
+from time import monotonic
 from nav_msgs.msg import Path
 from PIL import Image, ImageOps
-from tf.transformations import euler_from_quaternion
+from tf.transformations import euler_from_quaternion, quaternion_from_euler
 from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped, Twist
-
-import cProfile
 
 
 class Map:
@@ -30,7 +28,7 @@ class Map:
         # Open the map image
         map_name = map_df.image[0]
         im = Image.open(map_name)
-        size = 384, 608
+        size = 608, 384
         im.thumbnail(size)
         im = ImageOps.grayscale(im)
         # Get the limits of the map. This will help to display the map
@@ -349,6 +347,10 @@ class Navigation:
         rospy.Subscriber(
             "/amcl_pose", PoseWithCovarianceStamped, self.__ttbot_pose_cbk, queue_size=1
         )
+        # self.last_odom_msg = monotonic()
+        # rospy.Subscriber(
+        #     "/odom", PoseWithCovarianceStamped, self.__odom_cbk, queue_size=1
+        # )
         # Publishers
         ros_path = rospkg.RosPack()
         self.map_path = ros_path.get_path("final_project")
@@ -356,8 +358,7 @@ class Navigation:
         self.cmd_vel_pub = rospy.Publisher("cmd_vel", Twist, queue_size=1)
 
         self.mp = MapProcessor(self.map_path + "/maps/map")
-        kr = self.mp.rect_kernel(8, 1)
-        # kr = mp.rect_kernel(1,1)
+        kr = self.mp.rect_kernel(14, 1)
         self.mp.inflate_map(kr, True)
         self.mp.get_graph_from_map()
 
@@ -391,6 +392,16 @@ class Navigation:
         else:
             rospy.loginfo("ttbot_pose:{},{} > threshold".format(cov[0], cov[7]))
 
+    def __odom_cbk(self, data):
+        delta_t = monotonic() - self.last_odom_msg
+        self.last_odom_msg = monotonic()
+        self.ttbot_pose.pose.position.x += delta_t * data.twist.twist.linear.x
+        self.ttbot_pose.pose.position.y += delta_t * data.twist.twist.linear.y
+        quat = self.ttbot_pose.pose.orientation
+        x, y, z = euler_from_quaternion([quat.x, quat.y, quat.z, quat.w])
+        z += delta_t * data.twist.twist.angular.z
+        quat = quaternion_from_euler(x, y, z)
+
     def a_star_path_planner(self, start_pose, end_pose):
         """! A Start path planner.
         @param  start_pose    PoseStamped object containing the start of the path to be created.
@@ -403,69 +414,57 @@ class Navigation:
                 start_pose.pose.position, end_pose.pose.position
             )
         )
-        img_size_h = 243
-        img_size_w = 243
+        img_size_h = 384
+        img_size_w = 608
         resolution = 0.05
         origin_offset_x = 10
         origin_offset_y = 10
 
-        x_img = (
-            abs(round(start_pose.pose.position.y / resolution - img_size_h / 2))
-            - origin_offset_x
+        x_img = abs(
+            round(
+                (
+                    (img_size_h * resolution)
+                    - origin_offset_y
+                    - start_pose.pose.position.y
+                )
+                / resolution
+            )
         )
-        y_img = abs(round(start_pose.pose.position.x / resolution - img_size_w / 2))
-        if y_img < (img_size_w / 2) - origin_offset_y:
-            y_img = (
-                round(img_size_w / 2 + abs(img_size_w / 2 - y_img)) - origin_offset_y
-            )
-
-        elif y_img > (img_size_w / 2) + origin_offset_y:
-            y_img = (
-                round(img_size_w / 2 - abs(img_size_w / 2 - y_img)) - origin_offset_y
-            )
+        y_img = abs(round((origin_offset_x + start_pose.pose.position.x) / resolution))
         self.mp.map_graph.root = f"{x_img},{y_img}"
         rospy.loginfo(f"root = {x_img}, {y_img}")
 
-        x_img = (
-            abs(round(end_pose.pose.position.y / resolution - img_size_h / 2))
-            - origin_offset_x
+        x_img = abs(
+            round(
+                ((img_size_h * resolution) - origin_offset_y - end_pose.pose.position.y)
+                / resolution
+            )
         )
-        y_img = abs(round(end_pose.pose.position.x / resolution - img_size_w / 2))
-        if y_img < (img_size_w / 2) - origin_offset_y:
-            y_img = (
-                round(img_size_w / 2 + abs(img_size_w / 2 - y_img)) - origin_offset_y
-            )
-
-        elif y_img > (img_size_w / 2) + origin_offset_y:
-            y_img = (
-                round(img_size_w / 2 - abs(img_size_w / 2 - y_img)) - origin_offset_y
-            )
+        y_img = abs(round((origin_offset_x + end_pose.pose.position.x) / resolution))
         self.mp.map_graph.end = f"{x_img},{y_img}"
         rospy.loginfo(f"end = {x_img}, {y_img}")
 
         as_maze = AStar(self.mp.map_graph)
         path.poses.append(start_pose)
 
-        start = time.time()
+        start = monotonic()
         as_maze.solve(
             self.mp.map_graph.g[self.mp.map_graph.root],
             self.mp.map_graph.g[self.mp.map_graph.end],
         )
-        end = time.time()
+        end = monotonic()
         print("Elapsed Time: %.3f" % (end - start))
 
-        path_as, _ = as_maze.reconstruct_path(
+        path_as = as_maze.reconstruct_path(
             self.mp.map_graph.g[self.mp.map_graph.root],
             self.mp.map_graph.g[self.mp.map_graph.end],
         )
         for pose in path_as:
             path_pose = PoseStamped()
             pose = tuple(map(int, pose.split(",")))
-            path_pose.pose.position.x = (
-                (pose[1] - origin_offset_x) - img_size_h / 2
-            ) * resolution
+            path_pose.pose.position.x = (pose[1] * resolution) - origin_offset_x
             path_pose.pose.position.y = (
-                -((pose[0] + origin_offset_y) - img_size_w / 2) * resolution
+                -(pose[0] * resolution) - origin_offset_y + (img_size_h * resolution)
             )
             path.poses.append(path_pose)
         path.poses.append(end_pose)
@@ -517,26 +516,51 @@ class Navigation:
 
         return speed, heading
 
-    def move_ttbot(self, speed, heading):
+    def move_ttbot(self, speed, prev_heading, heading):
         """! Function to move turtlebot passing directly a heading angle and the speed.
-        @param  dist     Desired speed.
-        @param  heading   Desired yaw angle.
+        @param  speed           Distance error.
+        @param  prev_heading    Previous angle error.
+        @param  heading         Angle error.
         """
         cmd_vel = Twist()
 
-        heading_thres = 0.3
-        kp_x = 0.8
-        kp_z = 0.5
+        heading_thres = 0.1
+        kp_x = 0.3
+        kp_z = 0.6
+        kd_z = 0.1
 
         cmd_vel.linear.x = speed * kp_x
-        cmd_vel.angular.z = heading * kp_z
+        cmd_vel.angular.z = heading * kp_z + (heading - prev_heading) * kd_z
 
         # Prioritize turning
         if abs(heading) > heading_thres:
-            cmd_vel.linear.x = cmd_vel.linear.x / 5
+            cmd_vel.linear.x = 0
 
         rospy.loginfo(f"x: {cmd_vel.linear.x} z: {cmd_vel.angular.z}")
 
+        if cmd_vel.angular.z > 1.5:
+            cmd_vel.angular.z = 1.5
+        elif cmd_vel.angular.z < -1.5:
+            cmd_vel.angular.z = -1.5
+        if cmd_vel.linear.x > 0.5:
+            cmd_vel.linear.x = 0.5
+        elif cmd_vel.linear.x < -0.5:
+            cmd_vel.linear.x = -0.5
+
+        self.cmd_vel_pub.publish(cmd_vel)
+
+    def nudge_backwards(self):
+        startTime = monotonic()
+        backwardTime = 0.5  # s
+        backwardSpeed = -0.1  # m/s
+        cmd_vel = Twist()
+
+        rospy.loginfo("Scooting backwards")
+        while monotonic() - startTime < backwardTime:
+            cmd_vel.linear.x = backwardSpeed
+            self.cmd_vel_pub.publish(cmd_vel)
+            self.rate.sleep()
+        cmd_vel.linear.x = 0
         self.cmd_vel_pub.publish(cmd_vel)
 
     def run(self):
@@ -549,18 +573,23 @@ class Navigation:
         """
             Main loop
         """
+        self.nudge_backwards()
+
         dist_reached = True
         current_goal_pose = self.goal_pose
         current_goal = self.goal_pose
         idx = 0
         dist_threshold = 0.1
-        end_threshold = 0.05
+        heading_threshold = 0.1
+        end_threshold = 0.2
+        prev_heading = 0
+        prev_speed = 0
         while not rospy.is_shutdown():
+            speed, heading = self.path_follower(self.ttbot_pose, current_goal)
             # 1. Create the path to follow
             if current_goal_pose != self.goal_pose:
-                self.move_ttbot(0, 0)
+                self.move_ttbot(0, 0, 0)
                 path = self.a_star_path_planner(self.ttbot_pose, self.goal_pose)
-                # self.path_pub.publish(path)
                 current_goal_pose = self.goal_pose
                 dist_reached = False
             # 2. Loop through the path and move the robot
@@ -568,20 +597,8 @@ class Navigation:
                 idx = self.get_path_idx(path, self.ttbot_pose)
                 current_goal = path.poses[idx]
                 rospy.loginfo(f"path len = {len(path.poses)}")
-                speed, heading = self.path_follower(self.ttbot_pose, current_goal)
-                self.move_ttbot(speed, heading)
-                dist_current = np.linalg.norm(
-                    (
-                        (
-                            current_goal.pose.position.x
-                            - self.ttbot_pose.pose.position.x
-                        ),
-                        (
-                            current_goal.pose.position.y
-                            - self.ttbot_pose.pose.position.y
-                        ),
-                    )
-                )
+                self.move_ttbot(speed, prev_heading, heading)
+                dist_current = heading
                 dist_goal = np.linalg.norm(
                     (
                         (
@@ -601,8 +618,12 @@ class Navigation:
                 if dist_goal < end_threshold:
                     dist_reached = True
             else:
-                # _, heading = self.path_follower(self.ttbot_pose, current_goal)
-                self.move_ttbot(0, 0)  # heading)
+                if abs(heading) < heading_threshold:
+                    self.move_ttbot(0, 0, 0)
+                else:
+                    self.move_ttbot(0, prev_heading, heading)
+            prev_heading = heading
+            prev_speed = speed
             self.rate.sleep()
         rospy.signal_shutdown(f"[{self.name}] Finished Cleanly")
 
@@ -611,7 +632,6 @@ if __name__ == "__main__":
     nav = Navigation(node_name="Navigation")
     nav.init_app()
     try:
-        # cProfile.run("nav.run()")
         nav.run()
     except rospy.ROSInterruptException:
         print("program interrupted before completion", file=sys.stderr)
