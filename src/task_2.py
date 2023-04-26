@@ -4,11 +4,11 @@ import sys
 import yaml
 import rospy
 import time
+import heapq
 import rospkg
 import numpy as np
 import pandas as pd
 from copy import copy
-from graphviz import Graph
 from nav_msgs.msg import Path
 from PIL import Image, ImageOps
 from tf.transformations import euler_from_quaternion
@@ -58,52 +58,19 @@ class Map:
         return img_array
 
 
-class Queue:
-    def __init__(self, init_queue=[]):
-        self.queue = copy(init_queue)
-        self.start = 0
-        self.end = len(self.queue) - 1
+class PriorityQueue:
+    def __init__(self):
+        self.queue = []
 
     def __len__(self):
         numel = len(self.queue)
         return numel
 
-    def __repr__(self):
-        q = self.queue
-        tmpstr = ""
-        for i in range(len(self.queue)):
-            flag = False
-            if i == self.start:
-                tmpstr += "<"
-                flag = True
-            if i == self.end:
-                tmpstr += ">"
-                flag = True
-
-            if flag:
-                tmpstr += "| " + str(q[i]) + "|\n"
-            else:
-                tmpstr += " | " + str(q[i]) + "|\n"
-
-        return tmpstr
-
-    def __call__(self):
-        return self.queue
-
-    def initialize_queue(self, init_queue=[]):
-        self.queue = copy(init_queue)
-
-    def sort(self, key=str.lower):
-        self.queue = sorted(self.queue, key=key)
-
-    def push(self, data):
-        self.queue.append(data)
-        self.end += 1
+    def push(self, data, priority):
+        heapq.heappush(self.queue, (priority, data))
 
     def pop(self):
-        p = self.queue.pop(self.start)
-        self.end = len(self.queue) - 1
-        return p
+        return heapq.heappop(self.queue)[1]
 
 
 class Node:
@@ -121,6 +88,17 @@ class Node:
         self.children.extend(node)
         self.weight.extend(w)
 
+    def __cmp__(self, other):
+        thisNode = tuple(map(int, self.name.split(",")))
+        otherNode = tuple(map(int, other.name.split(",")))
+        return (thisNode[0] * thisNode[1]) - (otherNode[0] * otherNode[1])
+
+    def __lt__(self, other):
+        return self.__cmp__(other) < 0
+
+    def __gt__(self, other):
+        return self.__cmp__(other) > 0
+
 
 class Tree:
     def __init__(self, name):
@@ -128,25 +106,13 @@ class Tree:
         self.root = 0
         self.end = 0
         self.g = {}
-        self.g_visual = Graph("G")
 
     def __call__(self):
         for name, node in self.g.items():
-            if self.root == name:
-                self.g_visual.node(name, name, color="red")
-            elif self.end == name:
-                self.g_visual.node(name, name, color="blue")
-            else:
-                self.g_visual.node(name, name)
             for i in range(len(node.children)):
                 c = node.children[i]
                 w = node.weight[i]
                 # print('%s -> %s'%(name,c.name))
-                if w == 0:
-                    self.g_visual.edge(name, c.name)
-                else:
-                    self.g_visual.edge(name, c.name, label=str(w))
-        return self.g_visual
 
     def add_node(self, node, start=False, end=False):
         self.g[node.name] = node
@@ -169,49 +135,43 @@ class Tree:
 class AStar:
     def __init__(self, in_tree):
         self.in_tree = in_tree
-        self.q = Queue()
-        self.dist = {name: np.Inf for name, node in in_tree.g.items()}
-        self.h = {name: 0 for name, node in in_tree.g.items()}
+        self.q = PriorityQueue()
+        self.dist = {}
+        self.via = {}
 
-        for name, node in in_tree.g.items():
-            start = tuple(map(int, name.split(",")))
-            end = tuple(map(int, self.in_tree.end.split(",")))
-            self.h[name] = np.sqrt((end[0] - start[0]) ** 2 + (end[1] - start[1]) ** 2)
-
-        self.via = {name: 0 for name, node in in_tree.g.items()}
-        for __, node in in_tree.g.items():
-            self.q.push(node)
-
-    def __get_f_score(self, node):
-        return self.dist[node.name] + self.h[node.name]
+    def get_h_value(self, node):
+        start = tuple(map(int, node.name.split(",")))
+        end = tuple(map(int, self.in_tree.end.split(",")))
+        return abs(end[0] - start[0]) + abs(end[1] - start[1])
 
     def solve(self, sn, en):
+        self.q.push(sn, 0)
         self.dist[sn.name] = 0
+        self.via[sn.name] = None
         while len(self.q) > 0:
-            self.q.sort(key=self.__get_f_score)
             u = self.q.pop()
-            # print(u.name,self.q.queue)
             if u.name == en.name:
                 break
             for i in range(len(u.children)):
                 c = u.children[i]
                 w = u.weight[i]
                 new_dist = self.dist[u.name] + w
-                if new_dist < self.dist[c.name]:
+                if c.name not in self.dist.keys() or new_dist < self.dist[c.name]:
                     self.dist[c.name] = new_dist
+                    p = new_dist + self.get_h_value(c)
+                    self.q.push(c, p)
                     self.via[c.name] = u.name
 
     def reconstruct_path(self, sn, en):
         start_key = sn.name
         end_key = en.name
-        dist = self.dist[end_key]
         u = end_key
         path = [u]
         while u != start_key:
             u = self.via[u]
             path.append(u)
         path.reverse()
-        return path, dist
+        return path
 
 
 class MapProcessor:
@@ -455,10 +415,14 @@ class Navigation:
         )
         y_img = abs(round(start_pose.pose.position.x / resolution - img_size_w / 2))
         if y_img < (img_size_w / 2) - origin_offset_y:
-            y_img = round(img_size_w / 2 + abs(img_size_w / 2 - y_img)) - origin_offset_y
+            y_img = (
+                round(img_size_w / 2 + abs(img_size_w / 2 - y_img)) - origin_offset_y
+            )
 
         elif y_img > (img_size_w / 2) + origin_offset_y:
-            y_img = round(img_size_w / 2 - abs(img_size_w / 2 - y_img)) - origin_offset_y
+            y_img = (
+                round(img_size_w / 2 - abs(img_size_w / 2 - y_img)) - origin_offset_y
+            )
         self.mp.map_graph.root = f"{x_img},{y_img}"
         rospy.loginfo(f"root = {x_img}, {y_img}")
 
@@ -468,10 +432,14 @@ class Navigation:
         )
         y_img = abs(round(end_pose.pose.position.x / resolution - img_size_w / 2))
         if y_img < (img_size_w / 2) - origin_offset_y:
-            y_img = round(img_size_w / 2 + abs(img_size_w / 2 - y_img)) - origin_offset_y
+            y_img = (
+                round(img_size_w / 2 + abs(img_size_w / 2 - y_img)) - origin_offset_y
+            )
 
         elif y_img > (img_size_w / 2) + origin_offset_y:
-            y_img = round(img_size_w / 2 - abs(img_size_w / 2 - y_img)) - origin_offset_y
+            y_img = (
+                round(img_size_w / 2 - abs(img_size_w / 2 - y_img)) - origin_offset_y
+            )
         self.mp.map_graph.end = f"{x_img},{y_img}"
         rospy.loginfo(f"end = {x_img}, {y_img}")
 
